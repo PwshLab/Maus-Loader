@@ -20,7 +20,7 @@ function Download-Video {
         }
         catch {
             Write-Error "Output directory could not be created"
-            Write-Error "Using working directory instead"
+            Write-Verbose "Using working directory instead"
             $OutputDir = Resolve-Path -Path ".\"
         }
         
@@ -279,15 +279,12 @@ else
             Write-Host ("Downloaded file " + ($i + 1) + " out of " + $List.Length)
         }
         catch {
-            Write-Error ("Download " + ($i + 1) + " Failed")
-            Write-Error "Retrying..."
             try {
                 Download-Video -Link $Link -Silent | Out-Null
                 Write-Host ("Downloaded file " + ($i + 1) + " out of " + $List.Length)
             }
             catch {
                 Write-Error ("Unable to Download Video " + ($i + 1))
-                Write-Error "Continuing..."
             }
         }
     }
