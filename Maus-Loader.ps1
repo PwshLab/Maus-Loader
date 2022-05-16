@@ -10,6 +10,9 @@ function Download-Video {
 		$Overwrite,
         [Parameter(Mandatory = $false)]
 		[switch]
+		$Skip,
+        [Parameter(Mandatory = $false)]
+		[switch]
 		$Silent
 	)
 
@@ -65,7 +68,8 @@ function Download-Video {
         {
             $Download = $true
         }
-        else {
+        elseif (!$Skip)
+        {
             Write-Host ("File " + '"' + $FileName + '"' + " already exists.")
             $Option = Read-Host ("Overwrite File? [y/N]")
             $Download = $Option.ToLower().Equals("y")
@@ -116,7 +120,8 @@ function Download-Video {
         {
             $Download = $true
         }
-        else {
+        elseif (!$Skip)
+        {
             Write-Host ("File " + '"' + $FileName + '"' + " already exists.")
             $Option = Read-Host ("Overwrite File? [y/N]")
             $Download = $Option.ToLower().Equals("y")
@@ -275,12 +280,12 @@ else
     for ($i = 0; $i -lt $List.Length; $i++) {
         $Link = ($BaseUrl + $List[$i].href).Replace("../", "")
         try {
-            Download-Video -Link $Link -Silent | Out-Null
+            Download-Video -Link $Link -Skip -Silent | Out-Null
             Write-Host ("Downloaded file " + ($i + 1) + " out of " + $List.Length)
         }
         catch {
             try {
-                Download-Video -Link $Link -Silent | Out-Null
+                Download-Video -Link $Link -Overwrite -Silent | Out-Null
                 Write-Host ("Downloaded file " + ($i + 1) + " out of " + $List.Length)
             }
             catch {
