@@ -5,10 +5,10 @@ function Download-Video {
 		[ValidateNotNullOrEmpty()]
 		[string]
 		$Link,
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ParameterSetName = "Overwrite")]
 		[switch]
 		$Overwrite,
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ParameterSetName = "Skip")]
 		[switch]
 		$Skip,
         [Parameter(Mandatory = $false)]
