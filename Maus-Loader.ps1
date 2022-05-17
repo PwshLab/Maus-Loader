@@ -1,17 +1,17 @@
 function Download-Video {
 	[CmdletBinding()]
 	Param(
-		[Parameter(Mandatory = $true, ValueFromPipeline)]
+		[Parameter(Mandatory = $true, ValueFromPipeline, Position = 1)]
 		[ValidateNotNullOrEmpty()]
 		[string]
 		$Link,
-        [Parameter(Mandatory = $false, ParameterSetName = "Overwrite")]
+        	[Parameter(Mandatory = $false)]
 		[switch]
 		$Overwrite,
-        [Parameter(Mandatory = $false, ParameterSetName = "Skip")]
+        	[Parameter(Mandatory = $false)]
 		[switch]
 		$Skip,
-        [Parameter(Mandatory = $false)]
+        	[Parameter(Mandatory = $false)]
 		[switch]
 		$Silent
 	)
