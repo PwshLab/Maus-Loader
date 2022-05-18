@@ -228,7 +228,18 @@ while ($Result.Length -ne 1)
         break
     }
 
-    $Result = [array]($List | Where-Object -Property innerText -Value $Search -CMatch)
+    $ResultC = [array]($List | Where-Object -Property innerText -Value $Search -CMatch)
+    $ResultM = [array]($List | Where-Object -Property innerText -Value $Search -EQ)
+    
+    if ($ResultM.Length -eq 1)
+    {
+    	$Result = $ResultM
+    }
+    else
+    {
+    	$Result = $ResultC
+    }
+    
     $Result | Select-Object -Property innerText | Format-Wide -Column 4
     Write-Host ($Result.Length.ToString() + " Results")
     Write-Host
