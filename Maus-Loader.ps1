@@ -156,8 +156,21 @@ function Download-Video {
 
         $Page = Invoke-WebRequest -UseB -Uri $FileLink
         $Page = [Text.Encoding]::ASCII.GetString($Page.Content).Split("`n")
+        $Seen = [System.Collections.ArrayList]::new()
         $Links = $Page | 
-        Where-Object -FilterScript {$_.Contains("http")}
+        Where-Object -FilterScript {
+            $isLink = $_.Contains("http");
+            if ($isLink) {
+                $i = $_.IndexOf("/segment-") + 9;
+                $l = $_.Substring($i).IndexOf("-");
+                $Number = [int]$_.Substring($i, $l);
+                if (!$Seen.Contains($Number))
+                {   
+                    $Seen.Add($Number);
+                    Write-Output $true
+                }
+            }
+        }
 
         if (![IO.File]::Exists($FilePath) -or $Overwrite)
         {
