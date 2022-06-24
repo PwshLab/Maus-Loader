@@ -139,11 +139,19 @@ function Download-Video {
         }
 
         try {
-            $FileLink = $Page[$Index+1]
+            $Inline = $Page[$Index].Contains("http")
+            $FileLink = $Page[$Index+(!$Inline)]
         }
         catch {
             Write-Error "Unable to select resolution"
             Exit
+        }
+
+        if ($Inline)
+        {
+            $FileLink = $FileLink.Replace('"', "")
+            $i = $FileLink.IndexOf("http")
+            $FileLink = $FileLink.Substring($i)
         }
 
         $Page = Invoke-WebRequest -UseB -Uri $FileLink
