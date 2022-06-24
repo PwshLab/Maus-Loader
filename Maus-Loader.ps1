@@ -22,7 +22,7 @@ function Download-Video {
             $OutputDir = New-Item -Path $OutputDir -ItemType Directory -Force
         }
         catch {
-            Write-Error "Output directory could not be created"
+            Write-Verbose "Output directory could not be created"
             Write-Verbose "Using working directory instead"
             $OutputDir = Resolve-Path -Path ".\"
         }
@@ -31,11 +31,12 @@ function Download-Video {
         $OutputDir = Get-Item -Path $OutputDir
     }
 
+    # Base link to video viewing screen
     try {
         $Page = Invoke-WebRequest -UseB -Uri $Link
     }
     catch {
-        Write-Error "Download failed"
+        Write-Error "Download Failed with $Link"
         Exit
     }
 
@@ -46,16 +47,24 @@ function Download-Video {
     $i = $Page.IndexOf("'url': ")
     $l = $Page.Substring($i).IndexOf(",")
     $Page = $Page.Substring($i, $l)
-    $Link = $Page.Substring(7).Replace("'", "")
+    $NextLink = $Page.Substring(7).Replace("'", "")
+    
+    # Javascript file of play button
+    try {
+        $Page = Invoke-WebRequest -UseB -Uri $NextLink
+    }
+    catch {
+        Write-Error "Download Failed with $Link"
+        Exit
+    }
 
-    $Page = Invoke-WebRequest -UseB -Uri $Link
     $Page = $Page.Content
     $i = $Page.IndexOf("{")
     $l = $Page.Substring($i).LastIndexOf("}") + 1
     $Page = $Page.Substring($i, $l)
     $Page = $Page | ConvertFrom-Json
 
-    $Link = $Page.mediaResource.alt.videoURL.Substring(2)
+    $FileLink = $Page.mediaResource.alt.videoURL.Substring(2)
     $Name = $Page.trackerData.trackerClipTitle.Replace(":", "")
     $MediaFormat = $page.mediaResource.alt.mediaFormat
 
@@ -84,7 +93,7 @@ function Download-Video {
             }
             
             $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest -UseB -Uri $Link -OutFile $FilePath
+            Invoke-WebRequest -UseB -Uri $FileLink -OutFile $FilePath
             
             if (!$Silent)
             {
@@ -98,20 +107,46 @@ function Download-Video {
         $FileName = $Name + ".ts"
         $FilePath = Join-Path -Path $OutputDir -ChildPath $FileName
 
-        $Page = Invoke-WebRequest -UseB -Uri $Link
+        $Page = Invoke-WebRequest -UseB -Uri $FileLink
         $Page = [Text.Encoding]::ASCII.GetString($Page.Content).Split("`n")
         $Resolutions = $Page | 
         Where-Object -FilterScript {$_.Contains("RESOLUTION")} | 
         ForEach-Object {
             $i = $_.IndexOf("RESOLUTION")
             $l = $_.Substring($i).IndexOf(",")
-            $m = $_.Substring($i, $l).Split("=")[1].Split("x")
-            Write-Output ([int]$m[0]*[int]$m[1])
+            $m = $_.Substring($i, $l).Split("=")[1]
+            Write-Output $m
         }
-        $i = $Resolutions.IndexOf([int]($Resolutions | Measure-Object -Max).Maximum)
-        $Link = $Page[($i+1)*2]
 
-        $Page = Invoke-WebRequest -UseB -Uri $Link
+        $Value = -1
+        $Resolution = 0
+        for ($i = 0; $i -lt $Resolutions.Count; $i++) {
+            $m = $Resolutions[$i].Split("x")
+            $n = [int]$m[0]*[int]$m[1]
+            if ($n -gt $Value)
+            {
+                $Value = $n
+                $Resolution = $Resolutions[$i]
+            }
+        }
+
+        $Index = -1
+        for ($i = 0; $i -lt $Page.Count; $i++) {
+            if ($Page[$i].Contains($Resolution))
+            {
+                $Index = $i
+            }
+        }
+
+        try {
+            $FileLink = $Page[$i+1]
+        }
+        catch {
+            Write-Error "Unable to select resolution"
+            Exit
+        }
+
+        $Page = Invoke-WebRequest -UseB -Uri $FileLink
         $Page = [Text.Encoding]::ASCII.GetString($Page.Content).Split("`n")
         $Links = $Page | 
         Where-Object -FilterScript {$_.Contains("http")}
@@ -256,7 +291,7 @@ if ($Result.Length -eq 1)
         $Name = $FileInfo.Name
     }
     catch {
-        Write-Error "Download Failed"
+        Write-Error "Download Failed with $Link"
         Exit
     }
     
