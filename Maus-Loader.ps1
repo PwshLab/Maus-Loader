@@ -139,7 +139,7 @@ function Download-Video {
         }
 
         try {
-            $FileLink = $Page[$i+1]
+            $FileLink = $Page[$Index+1]
         }
         catch {
             Write-Error "Unable to select resolution"
